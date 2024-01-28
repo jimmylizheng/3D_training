@@ -9,3 +9,6 @@ screenshots
 db/
 tandt/
 tandt_db.zip
+*.zip
+*.jpg
+*.txt
