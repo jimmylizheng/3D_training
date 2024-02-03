@@ -188,7 +188,7 @@ def readColmapSceneInfo(path, images, eval, llffhold=8):
     
     # initialization with random points
     if not os.path.exists(ply_path): # if ply path does not exist
-        if os.path.exists(bin_path): # if bin path does not exist
+        if os.path.exists(bin_path): # if bin path does exist
             print("Converting point3d.bin to .ply, will happen only the first time you open the scene.")
             try:
                 xyz, rgb, _ = read_points3D_binary(bin_path)
@@ -201,6 +201,7 @@ def readColmapSceneInfo(path, images, eval, llffhold=8):
             num_pts=6700
             xyz = np.random.random((num_pts, 3)) * 2.6 - 1.3
             shs = np.random.random((num_pts, 3)) /255.0
+            storePly(ply_path, xyz, rgb)
             pcd = BasicPointCloud(points=xyz, colors=SH2RGB(shs), normals=np.zeros((num_pts, 3)))
     else:
         pcd = fetchPly(ply_path)
