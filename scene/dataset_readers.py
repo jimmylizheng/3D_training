@@ -201,6 +201,7 @@ def readColmapSceneInfo(path, images, eval, llffhold=8):
             num_pts=6700
             xyz = np.random.random((num_pts, 3)) * 2.6 - 1.3
             shs = np.random.random((num_pts, 3)) /255.0
+            rgb = SH2RGB(shs)
             storePly(ply_path, xyz, rgb)
             pcd = BasicPointCloud(points=xyz, colors=SH2RGB(shs), normals=np.zeros((num_pts, 3)))
     else:
