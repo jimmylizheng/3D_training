@@ -228,5 +228,11 @@ if __name__ == "__main__":
     torch.autograd.set_detect_anomaly(args.detect_anomaly)
     training(lp.extract(args), op.extract(args), pp.extract(args), args.test_iterations, args.save_iterations, args.checkpoint_iterations, args.start_checkpoint, args.debug_from)
 
+    # print the total number of splats
+    with open("ptnum_iteration_data.txt", 'r') as file:
+        lines = file.readlines()
+        last_line=lines[-1].strip()
+        print(last_line)
+
     # All done
     print("\nTraining complete.")
