@@ -12,12 +12,13 @@
 import os
 import random
 import json
+import numpy as np
 from utils.system_utils import searchForMaxIteration
 from scene.dataset_readers import sceneLoadTypeCallbacks
 from scene.gaussian_model import GaussianModel
 from arguments import ModelParams
 from utils.camera_utils import cameraList_from_camInfos, camera_to_JSON
-
+from utils.general_utils import progressive
 class Scene:
 
     gaussians : GaussianModel
@@ -39,7 +40,8 @@ class Scene:
 
         self.train_cameras = {}
         self.test_cameras = {}
-
+        print('source path',args.source_path)
+        print(os.path.join(args.source_path, "sparse"))
         if os.path.exists(os.path.join(args.source_path, "sparse")):
             scene_info = sceneLoadTypeCallbacks["Colmap"](args.source_path, args.images, args.eval)
         elif os.path.exists(os.path.join(args.source_path, "transforms_train.json")):
@@ -49,6 +51,7 @@ class Scene:
             assert False, "Could not recognize scene type!"
 
         if not self.loaded_iter:
+            print('not self.loaded_iter')
             with open(scene_info.ply_path, 'rb') as src_file, open(os.path.join(self.model_path, "input.ply") , 'wb') as dest_file:
                 dest_file.write(src_file.read())
             json_cams = []
@@ -75,12 +78,29 @@ class Scene:
             self.test_cameras[resolution_scale] = cameraList_from_camInfos(scene_info.test_cameras, resolution_scale, args)
 
         if self.loaded_iter:
-            self.gaussians.load_ply(os.path.join(self.model_path,
-                                                           "point_cloud",
-                                                           "iteration_" + str(self.loaded_iter),
-                                                           "point_cloud.ply"))
+            loaded_path = os.path.join(self.model_path,
+                                "point_cloud",
+                                "iteration_" + str(self.loaded_iter),
+                                "point_cloud.ply")
+            self.gaussians.load_ply(loaded_path)
+            print(f"Load trained model from for rendering: {loaded_path}")
         else:
             self.gaussians.create_from_pcd(scene_info.point_cloud, self.cameras_extent)
+        print(f"Number of points: {self.gaussians.get_xyz.shape[0]}")
+        # model_parameters = filter(lambda p: p.requires_grad, self.gaussians._xyz)
+        # params = sum([np.prod(p.size()) for p in model_parameters])
+        # print('create_from_pcd',params)
+
+        if not self.loaded_iter: # when doing render.py, don't combine
+            if progressive: # load pre-trained gaussians and combine
+                pre_trained_path = os.path.join(args.source_path,
+                                                "sparse/0",
+                                                # "6k.ply")
+                                                "6k_00074_GT/point_cloud/iteration_30000/point_cloud.ply")
+                                                # "6k_00031_LF/point_cloud/iteration_30000/point_cloud.ply")
+                print("fetch pre trained ply: ", pre_trained_path)
+
+                self.gaussians.combined_ply(pre_trained_path)
 
     def save(self, iteration):
         point_cloud_path = os.path.join(self.model_path, "point_cloud/iteration_{}".format(iteration))
