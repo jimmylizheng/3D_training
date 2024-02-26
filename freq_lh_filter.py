@@ -12,12 +12,16 @@ def low_pass_filter(image, cutoff_freq):
     # Create a mask for the low-pass filter
     rows, cols = image.shape
     crow, ccol = rows // 2 , cols // 2
-    mask = np.ones((rows, cols), np.uint8)
-    r = cutoff_freq  # Radius of the circular mask
-    center = (crow, ccol)
-    x, y = np.ogrid[:rows, :cols]
-    mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= r*r
-    mask[mask_area] = 0
+    # mask = np.ones((rows, cols), np.uint8)
+    # r = cutoff_freq  # Radius of the circular mask
+    # center = (crow, ccol)
+    # x, y = np.ogrid[:rows, :cols]
+    # mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= r*r
+    # mask[mask_area] = 0
+    
+    # Create a mask with high frequencies set to zero
+    mask = np.zeros((rows, cols), np.uint8)
+    mask[crow - cutoff_freq:crow + cutoff_freq, ccol - cutoff_freq:ccol + cutoff_freq] = 1
 
     # Apply the mask to the frequency domain
     f_transform_shifted = f_transform_shifted * mask
@@ -42,7 +46,7 @@ def low_pass_filter_color(image, cutoff_freq):
     # Merge the filtered color channels back into a BGR image
     img_filtered = cv2.merge([b_filtered, g_filtered, r_filtered])
 
-    return image - img_filtered
+    return img_filtered
 
 def high_pass_filter(image, cutoff_freq):
     # Apply FFT to the image
@@ -52,12 +56,16 @@ def high_pass_filter(image, cutoff_freq):
     # Create a mask for the high-pass filter
     rows, cols = image.shape
     crow, ccol = rows // 2 , cols // 2
+    # mask = np.ones((rows, cols), np.uint8)
+    # r = cutoff_freq  # Radius of the circular mask
+    # center = (crow, ccol)
+    # x, y = np.ogrid[:rows, :cols]
+    # mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 > r*r
+    # Create a mask with low frequencies set to zero
     mask = np.ones((rows, cols), np.uint8)
-    r = cutoff_freq  # Radius of the circular mask
-    center = (crow, ccol)
-    x, y = np.ogrid[:rows, :cols]
-    mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 > r*r
-    mask[mask_area] = 0
+    mask[crow - cutoff_freq:crow + cutoff_freq, ccol - cutoff_freq:ccol + cutoff_freq] = 0
+
+    # mask[mask_area] = 0
 
     # Apply the mask to the frequency domain
     f_transform_shifted = f_transform_shifted * mask
@@ -80,7 +88,7 @@ def high_pass_filter_color(image, cutoff_freq):
     # Merge the filtered color channels back into a BGR image
     img_filtered = cv2.merge([b_filtered, g_filtered, r_filtered])
 
-    return image - img_filtered
+    return img_filtered
 
 
 root=""
@@ -92,7 +100,7 @@ low_output_folder = root + f"images_low_{blurring_size}_test/"
 if not os.path.exists(low_output_folder):
     os.makedirs(low_output_folder)
     
-high_output_folder = root + "images_hig_test/"
+high_output_folder = root + "images_high_test/"
 if not os.path.exists(high_output_folder):
     os.makedirs(high_output_folder)
     
